@@ -31,6 +31,14 @@ class DocumentGeneratorTest extends TestCase
         $this->assertFileExists($outputPath);
         $this->assertGreaterThan(0, filesize($outputPath));
 
+        $zip = new \ZipArchive();
+        $this->assertSame(true, $zip->open($outputPath));
+        $documentXml = $zip->getFromName('word/document.xml');
+        $zip->close();
+
+        $this->assertStringContainsString('Siti', $documentXml);
+        $this->assertStringNotContainsString('{{nama}}', $documentXml);
+
         unlink($templatePath);
         unlink($outputPath);
         rmdir($directory);

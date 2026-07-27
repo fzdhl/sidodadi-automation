@@ -15,7 +15,7 @@ class DocumentTemplateRegistryTest extends TestCase
         $this->assertCount(4, $templates);
         $this->assertSame('Surat Keterangan Usaha', $templates[1]->name);
         $this->assertSame(
-            resource_path('templates'.DIRECTORY_SEPARATOR.'surat-keterangan-usaha.docx'),
+            resource_path('templates'.DIRECTORY_SEPARATOR.'KETERANGAN USAHA.docx'),
             $templates[1]->path,
         );
     }

@@ -20,15 +20,157 @@ final class DocumentGenerator
             throw new RuntimeException("Document template does not exist: {$template->path}");
         }
 
+        if (strtolower(pathinfo($template->path, PATHINFO_EXTENSION)) !== 'docx') {
+            throw new RuntimeException("Document template must be a .docx file: {$template->path}");
+        }
+
         $directory = dirname($outputPath);
         if (! is_dir($directory) && ! mkdir($directory, 0775, true) && ! is_dir($directory)) {
             throw new RuntimeException("Unable to create output directory: {$directory}");
         }
 
-        $processor = new TemplateProcessor($template->path);
-        $processor->setValues($values);
-        $processor->saveAs($outputPath);
+        $normalizedTemplate = $this->normalizeTemplateMacros($template->path);
+
+        try {
+            $processor = new TemplateProcessor($normalizedTemplate);
+            $processor->setMacroChars('{{', '}}');
+
+            if ($processor->getVariables() === []) {
+                throw new RuntimeException("Document template has no {{placeholder}} variables: {$template->path}");
+            }
+
+            $processor->setValues($values);
+            $processor->saveAs($outputPath);
+        } finally {
+            if (is_file($normalizedTemplate)) {
+                unlink($normalizedTemplate);
+            }
+        }
+
+        $this->assertValidDocx($outputPath);
 
         return $outputPath;
+    }
+
+    private function normalizeTemplateMacros(string $templatePath): string
+    {
+        $source = new \ZipArchive();
+        if ($source->open($templatePath) !== true) {
+            throw new RuntimeException("Unable to open document template: {$templatePath}");
+        }
+
+        $temporary = tempnam(sys_get_temp_dir(), 'sidodadi-template-');
+        if ($temporary === false) {
+            $source->close();
+            throw new RuntimeException('Unable to create a temporary document template.');
+        }
+
+        $target = new \ZipArchive();
+        $target->open($temporary, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+        for ($index = 0; $index < $source->numFiles; $index++) {
+            $name = $source->getNameIndex($index);
+            $content = $source->getFromIndex($index);
+
+            if ($content !== false && preg_match('#^word/(document|header\d+|footer\d+)\.xml$#', $name)) {
+                $content = $this->normalizeXmlMacros($content);
+            }
+
+            $target->addFromString($name, $content === false ? '' : $content);
+        }
+
+        $source->close();
+        $target->close();
+
+        return $temporary;
+    }
+
+    private function normalizeXmlMacros(string $xml): string
+    {
+        $document = new \DOMDocument();
+        $document->preserveWhiteSpace = false;
+        if (! $document->loadXML($xml)) {
+            throw new RuntimeException('Document template contains invalid XML.');
+        }
+
+        $xpath = new \DOMXPath($document);
+        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+        foreach ($xpath->query('//w:p[.//w:t]') as $paragraph) {
+            $textNodes = iterator_to_array($xpath->query('.//w:t', $paragraph));
+            if ($textNodes === []) {
+                continue;
+            }
+
+            $joined = implode('', array_map(
+                static fn (\DOMElement $node): string => $node->textContent,
+                $textNodes,
+            ));
+            preg_match_all('/\{\{\s*([A-Za-z0-9_-]+)\s*\}\}/', $joined, $matches, PREG_OFFSET_CAPTURE);
+
+            foreach (array_reverse($matches[0]) as $match) {
+                $rawMacro = $match[0];
+                $start = $match[1];
+                $canonical = '{{'.trim(substr($rawMacro, 2, -2)).'}}';
+                $end = $start + strlen($rawMacro);
+                $offset = 0;
+                $startIndex = null;
+                $endIndex = null;
+                $startOffset = 0;
+                $endOffset = 0;
+
+                foreach ($textNodes as $index => $node) {
+                    $length = strlen($node->textContent);
+                    if ($startIndex === null && $start >= $offset && $start < $offset + $length) {
+                        $startIndex = $index;
+                        $startOffset = $start - $offset;
+                    }
+                    if ($end > $offset && $end <= $offset + $length) {
+                        $endIndex = $index;
+                        $endOffset = $end - $offset;
+                        break;
+                    }
+                    $offset += $length;
+                }
+
+                if ($startIndex === null || $endIndex === null) {
+                    continue;
+                }
+
+                $startText = $textNodes[$startIndex]->textContent;
+                $endText = $textNodes[$endIndex]->textContent;
+                $prefix = substr($startText, 0, $startOffset);
+                $suffix = substr($endText, $endOffset);
+                $textNodes[$startIndex]->nodeValue = $prefix.$canonical.($startIndex === $endIndex ? $suffix : '');
+
+                if ($startIndex !== $endIndex) {
+                    for ($index = $startIndex + 1; $index < $endIndex; $index++) {
+                        $textNodes[$index]->nodeValue = '';
+                    }
+                    $textNodes[$endIndex]->nodeValue = $suffix;
+                }
+            }
+        }
+
+        return $document->saveXML();
+    }
+
+    private function assertValidDocx(string $path): void
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            throw new RuntimeException("Generated document is not a valid DOCX archive: {$path}");
+        }
+
+        foreach (['word/document.xml'] as $part) {
+            $xml = $zip->getFromName($part);
+            $document = new \DOMDocument();
+            if ($xml === false || ! $document->loadXML($xml)) {
+                $zip->close();
+                throw new RuntimeException("Generated document contains invalid XML in {$part}: {$path}");
+            }
+        }
+
+        $zip->close();
     }
 }
