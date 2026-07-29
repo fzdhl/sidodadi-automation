@@ -54,7 +54,7 @@ final class DocumentGenerator
                 }
             }
 
-            $processor->setValues($values);
+            $processor->setValues($this->sanitizeValuesForXml($values));
             $processor->saveAs($outputPath);
         } finally {
             if (is_file($normalizedTemplate)) {
@@ -197,6 +197,19 @@ final class DocumentGenerator
             } catch (\Throwable) {
                 // Leave invalid or unexpected date formats as-is.
             }
+        }
+
+        return $values;
+    }
+
+    private function sanitizeValuesForXml(array $values): array
+    {
+        foreach ($values as $key => $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $values[$key] = htmlspecialchars($value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
         }
 
         return $values;

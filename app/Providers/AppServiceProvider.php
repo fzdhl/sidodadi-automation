@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Documents\DocumentGenerator;
 use App\Documents\DocumentTemplateRegistry;
+use App\Residents\ResidentLookupService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(DocumentGenerator::class);
+        $this->app->singleton(ResidentLookupService::class);
     }
 
     /**

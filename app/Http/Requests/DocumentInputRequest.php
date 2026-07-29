@@ -23,6 +23,8 @@ class DocumentInputRequest extends FormRequest
             $rules[$field['name']] = $field['rules'];
         }
 
+        $rules['save_as_resident'] = ['sometimes', 'boolean'];
+
         return $rules;
     }
 }

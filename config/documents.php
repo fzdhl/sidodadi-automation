@@ -82,7 +82,6 @@ return [
             ['name' => 'nama_sekolah', 'label' => 'Nama Sekolah Anak', 'type' => 'text', 'rules' => ['required', 'string', 'max:150']],
         ],
         'keterangan' => [
-            // The common nama and nik fields represent the parent in this template.
             ['name' => 'nama_anak', 'label' => 'Nama Anak', 'type' => 'text', 'rules' => ['required', 'string', 'max:150']],
             ['name' => 'nik_anak', 'label' => 'NIK Anak', 'type' => 'text', 'rules' => ['required', 'digits:16']],
         ],
