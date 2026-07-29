@@ -69,4 +69,39 @@ class DocumentFormTest extends TestCase
         $response->assertRedirect(route('documents.create'))
             ->assertSessionHasErrors(['nik', 'nama', 'nomor_surat']);
     }
+
+    public function test_validation_errors_are_displayed_in_indonesian(): void
+    {
+        $response = $this->from(route('documents.create'))
+            ->post(route('documents.store'), []);
+
+        $response->assertRedirect(route('documents.create'));
+        $this->assertStringContainsString('Kolom nomor surat wajib diisi.', session('errors')->first('nomor_surat'));
+    }
+
+    public function test_runtime_exceptions_are_shown_as_user_friendly_error(): void
+    {
+        config(['documents.types.domisili.template' => 'not-found-template.docx']);
+
+        $response = $this->from(route('documents.create'))
+            ->post(route('documents.store'), [
+                'document_type' => 'domisili',
+                'nomor_surat' => '470/001/2026',
+                'tanggal_surat' => '2026-07-24',
+                'nama' => 'Siti Aminah',
+                'nik' => '3507010101010001',
+                'tempat_lahir' => 'Malang',
+                'tanggal_lahir' => '1990-01-01',
+                'jenis_kelamin' => 'Perempuan',
+                'agama' => 'Islam',
+                'status_perkawinan' => 'Belum Kawin',
+                'kewarganegaraan' => 'Indonesia',
+                'pekerjaan' => 'Wiraswasta',
+                'alamat' => 'Dusun Sidodadi',
+                'keperluan' => 'Pengajuan surat keterangan domisili',
+            ]);
+
+        $response->assertRedirect(route('documents.create'));
+        $this->assertStringContainsString('Document template does not exist:', session('error'));
+    }
 }

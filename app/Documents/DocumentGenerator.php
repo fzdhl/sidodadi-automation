@@ -2,6 +2,7 @@
 
 namespace App\Documents;
 
+use Carbon\Carbon;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
 
@@ -37,6 +38,20 @@ final class DocumentGenerator
 
             if ($processor->getVariables() === []) {
                 throw new RuntimeException("Document template has no {{placeholder}} variables: {$template->path}");
+            }
+
+            $values = $this->formatDateFields($values, $type);
+            if (! isset($values['ttl']) && isset($values['tempat_lahir'], $values['tanggal_lahir'])) {
+                $values['ttl'] = $values['tempat_lahir'].', '.$values['tanggal_lahir'];
+            }
+
+            $uppercase = (array) config('documents.uppercase_placeholders', []);
+            if ($uppercase !== []) {
+                foreach ($values as $key => $value) {
+                    if (is_string($value) && in_array($key, $uppercase, true)) {
+                        $values[$key] = mb_strtoupper($value, 'UTF-8');
+                    }
+                }
             }
 
             $processor->setValues($values);
@@ -108,10 +123,15 @@ final class DocumentGenerator
             ));
             preg_match_all('/\{\{\s*([A-Za-z0-9_-]+)\s*\}\}/', $joined, $matches, PREG_OFFSET_CAPTURE);
 
-            foreach (array_reverse($matches[0]) as $match) {
+            $fullMatches = $matches[0];
+            $nameMatches = $matches[1];
+
+            for ($m = count($fullMatches) - 1; $m >= 0; $m--) {
+                $match = $fullMatches[$m];
                 $rawMacro = $match[0];
                 $start = $match[1];
-                $canonical = '{{'.trim(substr($rawMacro, 2, -2)).'}}';
+                $macroName = $nameMatches[$m][0] ?? trim(substr($rawMacro, 2, -2));
+                $canonical = '{{'.$macroName.'}}';
                 $end = $start + strlen($rawMacro);
                 $offset = 0;
                 $startIndex = null;
@@ -153,6 +173,33 @@ final class DocumentGenerator
         }
 
         return $document->saveXML();
+    }
+
+    private function formatDateFields(array $values, string $type): array
+    {
+        $fields = array_merge(
+            config('documents.fields.common', []),
+            config("documents.fields.{$type}", []),
+        );
+
+        foreach ($fields as $field) {
+            if (($field['type'] ?? null) !== 'date') {
+                continue;
+            }
+
+            $name = $field['name'];
+            if (! isset($values[$name]) || ! is_string($values[$name])) {
+                continue;
+            }
+
+            try {
+                $values[$name] = Carbon::parse($values[$name])->translatedFormat('d F Y');
+            } catch (\Throwable) {
+                // Leave invalid or unexpected date formats as-is.
+            }
+        }
+
+        return $values;
     }
 
     private function assertValidDocx(string $path): void

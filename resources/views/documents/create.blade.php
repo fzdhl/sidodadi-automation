@@ -30,6 +30,13 @@
         <div class="alert success">{{ session('success') }}</div>
     @endif
 
+    @if (session('error'))
+        <div class="alert errors">
+            <strong>Terjadi kesalahan:</strong>
+            <p>{{ session('error') }}</p>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="alert errors">
             <strong>Periksa kembali data berikut:</strong>
@@ -56,7 +63,7 @@
                 <div class="{{ $field['type'] === 'textarea' ? 'full' : '' }}">
                     <label for="{{ $field['name'] }}">{{ $field['label'] }}</label>
                     @if ($field['type'] === 'textarea')
-                        <textarea id="{{ $field['name'] }}" name="{{ $field['name'] }}">{{ old($field['name']) }}</textarea>
+                        <textarea id="{{ $field['name'] }}" name="{{ $field['name'] }}" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($field['name']) }}</textarea>
                     @elseif ($field['type'] === 'select')
                         <select id="{{ $field['name'] }}" name="{{ $field['name'] }}">
                             <option value="">Pilih...</option>
@@ -65,7 +72,7 @@
                             @endforeach
                         </select>
                     @else
-                        <input id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}">
+                        <input id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
                     @endif
                     @error($field['name']) <small class="errors">{{ $message }}</small> @enderror
                 </div>

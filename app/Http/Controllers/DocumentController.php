@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Documents\DocumentGenerator;
 use App\Documents\DocumentTemplateRegistry;
 use App\Http\Requests\DocumentInputRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -33,14 +34,11 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function store(DocumentInputRequest $request): BinaryFileResponse
+    public function store(DocumentInputRequest $request): BinaryFileResponse|RedirectResponse
     {
         $validated = $request->validated();
         $type = $validated['document_type'];
         unset($validated['document_type']);
-
-        // Support templates that use the combined TTL placeholder.
-        $validated['ttl'] = $validated['tempat_lahir'].', '.$validated['tanggal_lahir'];
 
         $disk = config('documents.output_disk', 'local');
         $directory = config('documents.output_directory', 'generated-documents');
@@ -48,7 +46,19 @@ class DocumentController extends Controller
         $relativePath = $directory.'/'.$filename;
         $outputPath = Storage::disk($disk)->path($relativePath);
 
-        $this->generator->generate($type, $validated, $outputPath);
+        try {
+            $this->generator->generate($type, $validated, $outputPath);
+        } catch (\RuntimeException $exception) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $exception->getMessage());
+        } catch (\Throwable $exception) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat membuat dokumen. Silakan coba lagi.');
+        }
 
         return response()->download(
             $outputPath,
