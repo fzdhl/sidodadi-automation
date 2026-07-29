@@ -102,6 +102,9 @@ class DocumentFormTest extends TestCase
             ]);
 
         $response->assertRedirect(route('documents.create'));
-        $this->assertStringContainsString('Document template does not exist:', session('error'));
+        $this->assertMatchesRegularExpression(
+            '/^Terjadi kesalahan saat membuat dokumen\. Silakan coba lagi\. Kode: DOCGEN-[A-Z0-9]{8}$/',
+            session('error'),
+        );
     }
 }

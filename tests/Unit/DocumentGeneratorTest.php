@@ -36,7 +36,7 @@ class DocumentGeneratorTest extends TestCase
         $documentXml = $zip->getFromName('word/document.xml');
         $zip->close();
 
-        $this->assertStringContainsString('Siti', $documentXml);
+        $this->assertStringContainsString('SITI', $documentXml);
         $this->assertStringNotContainsString('{{nama}}', $documentXml);
 
         unlink($templatePath);
