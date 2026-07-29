@@ -14,4 +14,5 @@ Route::get('/residents', [ResidentController::class, 'index'])->name('residents.
 Route::post('/residents/lookup', [ResidentController::class, 'lookup'])->name('residents.lookup');
 Route::post('/residents', [ResidentController::class, 'store'])->name('residents.store');
 Route::post('/residents/import', [ResidentController::class, 'import'])->name('residents.import');
+Route::get('/residents/template', [ResidentController::class, 'template'])->name('residents.template');
 Route::get('/residents/export', [ResidentController::class, 'export'])->name('residents.export');

@@ -45,6 +45,7 @@
 <main class="container">
     <h1>Sidodadi Document Generator</h1>
     <p class="muted">Pilih jenis surat, lalu isi data pemohon.</p>
+    <p><a class="button secondary" href="{{ route('residents.index') }}">Lihat data penduduk internal</a></p>
 
     @if (session('success'))
         <div class="alert success">{{ session('success') }}</div>

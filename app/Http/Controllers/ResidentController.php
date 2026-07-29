@@ -20,10 +20,12 @@ class ResidentController extends Controller
     {
         $query = $request->string('search')->trim()->toString();
         $residents = $this->residents->search($query);
+        $totalResidents = \App\Models\Resident::count();
 
         return view('residents.index', [
             'residents' => $residents,
             'search' => $query,
+            'totalResidents' => $totalResidents,
         ]);
     }
 
@@ -85,31 +87,62 @@ class ResidentController extends Controller
             return redirect()->route('residents.index')->with('error', 'Gagal membaca file impor.');
         }
 
+        $fillables = array_map('strtolower', (new Resident())->getFillable());
         $columns = [];
         $imported = 0;
+        $skipped = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
             if ($columns === []) {
-                $columns = array_map('trim', $row);
+                $columns = array_map('strtolower', array_map('trim', $row));
+                if (! in_array('nik', $columns, true)) {
+                    fclose($handle);
+                    return redirect()->route('residents.index')
+                        ->with('error', 'Header CSV harus memuat kolom nik.');
+                }
+                continue;
+            }
+
+            if ($row === [] || (count($row) === 1 && trim($row[0]) === '')) {
                 continue;
             }
 
             $row = array_combine($columns, $row);
-            if ($row === false || empty($row['nik'])) {
+            if ($row === false || empty(trim((string) ($row['nik'] ?? '')))) {
+                $skipped++;
                 continue;
             }
 
+            $row = array_intersect_key($row, array_flip($fillables));
             $this->residents->saveResident($row);
             $imported++;
         }
 
         fclose($handle);
 
+        $message = "Berhasil mengimpor {$imported} data penduduk.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} baris dilewati karena data tidak lengkap atau NIK kosong.";
+        }
+
         return redirect()->route('residents.index')
-            ->with('success', "Berhasil mengimpor {$imported} data penduduk.");
+            ->with('success', $message);
     }
 
-    public function export(): Response
+    public function template()
+    {
+        $columns = (new Resident())->getFillable();
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="resident-template.csv"',
+        ];
+
+        $csv = implode(',', $columns) . "\n";
+
+        return response($csv, 200, $headers);
+    }
+
+    public function export()
     {
         $residents = $this->residents->all();
         $headers = [
@@ -117,7 +150,7 @@ class ResidentController extends Controller
             'Content-Disposition' => 'attachment; filename="residents.csv"',
         ];
 
-        $columns = Resident::getFillable();
+        $columns = (new Resident())->getFillable();
 
         $callback = function () use ($residents, $columns) {
             $handle = fopen('php://output', 'w');

@@ -38,6 +38,15 @@
         <div class="alert errors">{{ session('error') }}</div>
     @endif
 
+    <div class="card">
+        <p><strong>Internal resident storage:</strong> {{ $totalResidents }} data tersimpan.</p>
+        <p class="muted">Halaman ini menampilkan data internal yang digunakan untuk lookup NIK dan pengisian dokumen otomatis.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+            <a class="button secondary" href="{{ route('residents.template') }}">Unduh template CSV</a>
+            <a class="button secondary" href="{{ route('residents.export') }}">Ekspor CSV</a>
+        </div>
+    </div>
+
     <form method="GET" action="{{ route('residents.index') }}" class="card">
         <div class="grid">
             <div>
@@ -51,6 +60,36 @@
             </div>
         </div>
     </form>
+
+    <div class="card">
+        <h2>Daftar Penduduk</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>NIK</th>
+                    <th>Nama</th>
+                    <th>TTL</th>
+                    <th>Jenis Kelamin</th>
+                    <th>Alamat</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($residents as $resident)
+                    <tr>
+                        <td>{{ $resident->nik }}</td>
+                        <td>{{ $resident->nama }}</td>
+                        <td>{{ $resident->tempat_lahir }}, {{ optional($resident->tanggal_lahir)->format('Y-m-d') }}</td>
+                        <td>{{ $resident->jenis_kelamin }}</td>
+                        <td>{{ \Illuminate\Support\Str::limit($resident->alamat, 80) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5">Tidak ada data penduduk yang cocok.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
     <form method="POST" action="{{ route('residents.import') }}" enctype="multipart/form-data" class="card">
         @csrf
@@ -85,36 +124,6 @@
         </div>
         <p><button class="button" type="submit">Simpan Penduduk</button></p>
     </form>
-
-    <div class="card">
-        <h2>Daftar Penduduk</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>NIK</th>
-                    <th>Nama</th>
-                    <th>TTL</th>
-                    <th>Jenis Kelamin</th>
-                    <th>Alamat</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($residents as $resident)
-                    <tr>
-                        <td>{{ $resident->nik }}</td>
-                        <td>{{ $resident->nama }}</td>
-                        <td>{{ $resident->tempat_lahir }}, {{ optional($resident->tanggal_lahir)->format('Y-m-d') }}</td>
-                        <td>{{ $resident->jenis_kelamin }}</td>
-                        <td>{{ \Illuminate\Support\Str::limit($resident->alamat, 80) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5">Tidak ada data penduduk yang cocok.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
 </main>
 </body>
 </html>
