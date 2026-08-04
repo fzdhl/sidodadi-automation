@@ -1,141 +1,235 @@
+Exit code: 0
+Wall time: 1.2 seconds
+Output:
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Penduduk | {{ config('app.name') }}</title>
-    <style>
-        body { background: #fafbf7; color: #263322; font-family: Arial, sans-serif; margin: 0; }
-        .sidebar { background: #547234; color: #f8f5e8; height: 100vh; left: 0; padding: 24px 16px; position: fixed; top: 0; width: 220px; z-index: 10; box-sizing: border-box; }
-        .sidebar h2 { color: #fff; font-size: 1.05rem; margin: 0 0 28px; }
-        .sidebar a { border-radius: 6px; color: #f8f5e8; display: block; margin: 6px 0; padding: 11px 12px; text-decoration: none; }
-        .sidebar a:hover, .sidebar a.active { background: #405829; color: #fff; }
-        .page-content { margin-left: 220px; min-height: 100vh; }
-        .container { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
-        .card { background: #fff; border: 1px solid #dce5d2; border-radius: 8px; padding: 24px; margin-top: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-        .full { grid-column: 1 / -1; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; }
-        input, select, textarea { border: 1px solid #c5d2b8; border-radius: 5px; box-sizing: border-box; padding: 10px; width: 100%; }
-        textarea { min-height: 90px; resize: vertical; }
-        .button { background: #FEC51E; border: 0; border-radius: 5px; color: #3d5226; cursor: pointer; font-weight: 600; padding: 11px 18px; }
-        .button.secondary { background: #547234; color: #fff; }
-        .alert { border-radius: 5px; margin: 16px 0; padding: 12px 16px; }
-        .success { background: #dcfce7; color: #166534; }
-        .errors { background: #fee2e2; color: #991b1b; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #dce5d2; padding: 10px; text-align: left; }
-        th { background: #f4f7ef; }
-        .muted { color: #64745d; }
-        @media (max-width: 680px) { .sidebar { height: auto; position: static; width: 100%; } .sidebar h2 { margin-bottom: 12px; } .sidebar a { display: inline-block; } .page-content { margin-left: 0; } .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-<nav class="sidebar" aria-label="Navigasi utama">
-    <h2>Sidodadi</h2>
-    <a href="{{ route('documents.create') }}">Buat Dokumen</a>
-    <a class="active" href="{{ route('residents.index') }}">Data Penduduk</a>
+<nav class="sidebar position-fixed top-0 start-0 vh-100 p-3" aria-label="Navigasi utama">
+    <h2 class="mb-4">Sidodadi</h2>
+    <a class="d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('documents.create') }}">Buat Dokumen</a>
+    <a class="active d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('residents.index') }}">Data Penduduk</a>
 </nav>
 <main class="page-content">
-<div class="container">
-    <h1>Data Penduduk</h1>
+<div class="container-fluid">
+    <h1 class="fw-bold">Data Penduduk</h1>
     <p class="muted">Kelola data penduduk untuk lookup NIK dan pengisian dokumen otomatis.</p>
 
     @if (session('success'))
-        <div class="alert success">{{ session('success') }}</div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     @if (session('error'))
-        <div class="alert errors">{{ session('error') }}</div>
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="card">
+    <div class="resident-storage-summary">
         <p><strong>Internal resident storage:</strong> {{ $totalResidents }} data tersimpan.</p>
         <p class="muted">Halaman ini menampilkan data internal yang digunakan untuk lookup NIK dan pengisian dokumen otomatis.</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
-            <a class="button secondary" href="{{ route('residents.template') }}">Unduh template CSV</a>
-            <a class="button secondary" href="{{ route('residents.export') }}">Ekspor CSV</a>
-        </div>
     </div>
 
-    <form method="GET" action="{{ route('residents.index') }}" class="card">
-        <div class="grid">
-            <div>
-                <label for="search">Cari NIK atau Nama</label>
-                <input id="search" name="search" value="{{ $search }}" placeholder="Masukkan NIK atau nama...">
-            </div>
-            <div class="full" style="align-self:end;">
-                <button class="button" type="submit">Cari</button>
-                <a class="button secondary" href="{{ route('residents.index') }}">Reset</a>
-                <a class="button secondary" href="{{ route('residents.export') }}">Ekspor CSV</a>
-            </div>
-        </div>
-    </form>
+    <div class="card mt-4 p-3">
+        <ul class="nav nav-tabs" id="residentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-panel" type="button" role="tab" aria-controls="list-panel" aria-selected="true">Daftar Penduduk</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage-panel" type="button" role="tab" aria-controls="manage-panel" aria-selected="false">Kelola Data</button>
+            </li>
+        </ul>
 
-    <div class="card">
-        <h2>Daftar Penduduk</h2>
-        <table>
+        <div class="tab-content" id="residentTabsContent">
+        <div class="tab-pane fade p-3" id="manage-panel" role="tabpanel" aria-labelledby="manage-tab" tabindex="0">
+        <h2 class="h4 fw-bold">Ekspor Data</h2>
+        <div class="d-flex gap-2 flex-wrap mt-3">
+            <a class="button secondary btn btn-success" href="{{ route('residents.template') }}">Unduh template CSV</a>
+            <a class="button secondary btn btn-success" href="{{ route('residents.export') }}">Ekspor CSV</a>
+            <a class="button secondary btn btn-success" href="{{ route('residents.export.xlsx') }}">Ekspor XLSX</a>
+        </div>
+        <form method="POST" action="{{ route('residents.import') }}" enctype="multipart/form-data" class="border-top mt-4 pt-3">
+            @csrf
+            <h2 class="h4 fw-bold">Impor Data</h2>
+            <label class="form-label mt-3" for="resident_csv">Pilih file data penduduk</label>
+            <input class="form-control" type="file" id="resident_csv" name="resident_csv" accept=".csv,.xlsx">
+            <p class="muted">Menerima CSV template aplikasi atau XLSX DPT Sidodadi dengan header DPID, NO_KK, NIK, NAMA_LGKP, TMPT_LHR, TGL_LAHIR, JENIS_KELAMIN, dan ALAMAT.</p>
+            <button class="button btn btn-warning" type="submit">Impor Data</button>
+        </form>
+        </div>
+
+        <div class="tab-pane fade show active p-3" id="list-panel" role="tabpanel" aria-labelledby="list-tab" tabindex="0">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+            <h2 class="fw-bold mb-0">Daftar Penduduk</h2>
+            <button class="btn btn-warning fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#residentModal">Tambah Penduduk</button>
+        </div>
+        <form method="GET" action="{{ route('residents.index') }}" class="border-bottom mb-4 pb-4">
+            <div class="row g-3">
+                <div>
+                    <label class="form-label fw-bold" for="search">Cari NIK atau Nama</label>
+                    <div class="position-relative">
+                        <input class="form-control" id="search" name="search" value="{{ $search }}" placeholder="Masukkan NIK atau nama..." autocomplete="off">
+                        <div id="residentSuggestions" class="list-group position-absolute w-100 shadow-sm" style="display:none; z-index: 1040;"></div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        @php
+            $residentTableColumns = [
+                'nik' => 'NIK',
+                'nama' => 'Nama',
+                'tempat_lahir' => 'Tempat Lahir',
+                'tanggal_lahir' => 'Tanggal Lahir',
+                'jenis_kelamin' => 'Jenis Kelamin',
+                'agama' => 'Agama',
+                'status_perkawinan' => 'Status Perkawinan',
+                'kewarganegaraan' => 'Kewarganegaraan',
+                'pekerjaan' => 'Pekerjaan',
+                'alamat' => 'Alamat',
+                'jenis_usaha' => 'Jenis Usaha',
+                'nama_usaha' => 'Nama Usaha',
+                'lama_usaha' => 'Lama Usaha',
+                'alamat_usaha' => 'Alamat Usaha',
+                'nama_anak' => 'Nama Anak',
+                'nik_anak' => 'NIK Anak',
+                'nama_sekolah' => 'Nama Sekolah',
+            ];
+        @endphp
+        <div class="table-responsive">
+        <table class="table table-bordered align-middle text-nowrap">
             <thead>
                 <tr>
-                    <th>NIK</th>
-                    <th>Nama</th>
-                    <th>TTL</th>
-                    <th>Jenis Kelamin</th>
-                    <th>Alamat</th>
+                    @foreach ($residentTableColumns as $label)
+                        <th>{{ $label }}</th>
+                    @endforeach
                 </tr>
             </thead>
             <tbody>
                 @forelse ($residents as $resident)
                     <tr>
-                        <td>{{ $resident->nik }}</td>
-                        <td>{{ $resident->nama }}</td>
-                        <td>{{ $resident->tempat_lahir }}, {{ optional($resident->tanggal_lahir)->format('Y-m-d') }}</td>
-                        <td>{{ $resident->jenis_kelamin }}</td>
-                        <td>{{ \Illuminate\Support\Str::limit($resident->alamat, 80) }}</td>
+                        @foreach ($residentTableColumns as $column => $label)
+                            <td>{{ $column === 'tanggal_lahir' ? optional($resident->{$column})->format('Y-m-d') : $resident->{$column} }}</td>
+                        @endforeach
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">Tidak ada data penduduk yang cocok.</td>
+                        <td colspan="{{ count($residentTableColumns) }}">Tidak ada data penduduk yang cocok.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
-    </div>
+        </div>
+        <div class="mt-3">
+            {{ $residents->withQueryString()->links() }}
+        </div>
+        </div>
 
-    <form method="POST" action="{{ route('residents.import') }}" enctype="multipart/form-data" class="card">
+        <div class="modal fade" id="residentModal" tabindex="-1" aria-labelledby="residentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title h4 fw-bold" id="residentModalLabel">Tambah / Perbarui Penduduk</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+    <form method="POST" action="{{ route('residents.store') }}">
         @csrf
-        <label for="resident_csv">Impor data penduduk (CSV)</label>
-        <input type="file" id="resident_csv" name="resident_csv" accept=".csv">
-        <p class="muted">File CSV harus memiliki header seperti nik,nama,tempat_lahir,tanggal_lahir,jenis_kelamin,agama,status_perkawinan,kewarganegaraan,pekerjaan,alamat,jenis_usaha,nama_usaha,lama_usaha,alamat_usaha,nama_anak,nik_anak,nama_sekolah</p>
-        <p><button class="button" type="submit">Impor CSV</button></p>
-    </form>
-
-    <form method="POST" action="{{ route('residents.store') }}" class="card">
-        @csrf
-        <h2>Tambah / Perbarui Penduduk</h2>
-        <div class="grid">
+        <div class="row g-3">
             @foreach (array_merge(config('documents.fields.common', []), config('documents.fields.usaha', []), config('documents.fields.tidak-mampu', []), config('documents.fields.keterangan', [])) as $field)
-                <div class="{{ $field['type'] === 'textarea' ? 'full' : '' }}">
-                    <label for="{{ $field['name'] }}">{{ $field['label'] }}</label>
+                <div class="{{ $field['type'] === 'textarea' ? 'col-12' : 'col-md-6' }}">
+                    <label class="form-label" for="{{ $field['name'] }}">{{ $field['label'] }}</label>
                     @if ($field['type'] === 'textarea')
-                        <textarea id="{{ $field['name'] }}" name="{{ $field['name'] }}" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($field['name']) }}</textarea>
+                        <textarea class="form-control" id="{{ $field['name'] }}" name="{{ $field['name'] }}" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($field['name']) }}</textarea>
                     @elseif ($field['type'] === 'select')
-                        <select id="{{ $field['name'] }}" name="{{ $field['name'] }}">
+                        <select class="form-select" id="{{ $field['name'] }}" name="{{ $field['name'] }}">
                             <option value="">Pilih...</option>
                             @foreach ($field['options'] as $option)
                                 <option value="{{ $option }}" @selected(old($field['name']) === $option)>{{ $option }}</option>
                             @endforeach
                         </select>
                     @else
-                        <input id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
+                        <input class="form-control" id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
                     @endif
-                    @error($field['name']) <small class="errors">{{ $message }}</small> @enderror
+                    @error($field['name']) <small class="invalid-feedback d-block">{{ $message }}</small> @enderror
                 </div>
             @endforeach
         </div>
-        <p><button class="button" type="submit">Simpan Penduduk</button></p>
+        <p><button class="button btn btn-warning" type="submit">Simpan Penduduk</button></p>
     </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </main>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('search');
+        const suggestions = document.getElementById('residentSuggestions');
+        const searchForm = input?.closest('form');
+        let timer;
+
+        const hideSuggestions = () => {
+            if (suggestions) {
+                suggestions.style.display = 'none';
+                suggestions.innerHTML = '';
+            }
+        };
+
+        const renderSuggestions = (items) => {
+            if (!suggestions || !items.length) {
+                hideSuggestions();
+                return;
+            }
+            suggestions.innerHTML = items.map(item => `
+                <button type="button" class="list-group-item list-group-item-action" data-nik="${item.nik}">
+                    <strong>${item.nama}</strong><br><small>${item.nik} · ${item.tempat_lahir || ''}</small>
+                </button>
+            `).join('');
+            suggestions.style.display = 'block';
+            suggestions.querySelectorAll('[data-nik]').forEach(button => {
+                button.addEventListener('click', () => {
+                    input.value = button.dataset.nik;
+                    searchForm?.submit();
+                });
+            });
+        };
+
+        input?.addEventListener('input', function () {
+            window.clearTimeout(timer);
+            const query = input.value.trim();
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+            timer = window.setTimeout(async () => {
+                const response = await fetch(`{{ route('residents.search') }}?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (response.ok) {
+                    renderSuggestions((await response.json()).data || []);
+                }
+            }, 250);
+        });
+
+        input?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                hideSuggestions();
+                searchForm?.submit();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!suggestions?.contains(event.target) && event.target !== input) {
+                hideSuggestions();
+            }
+        });
+    });
+</script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resident;
+use App\Residents\ResidentImportService;
 use App\Residents\ResidentLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -12,14 +13,17 @@ use Illuminate\View\View;
 
 class ResidentController extends Controller
 {
-    public function __construct(private readonly ResidentLookupService $residents)
+    public function __construct(
+        private readonly ResidentLookupService $residents,
+        private readonly ResidentImportService $importer,
+    )
     {
     }
 
     public function index(Request $request): View
     {
         $query = $request->string('search')->trim()->toString();
-        $residents = $this->residents->search($query);
+        $residents = $this->residents->paginate($query);
         $totalResidents = \App\Models\Resident::count();
 
         return view('residents.index', [
@@ -41,6 +45,25 @@ class ResidentController extends Controller
         }
 
         return response()->json(['data' => $resident]);
+    }
+
+    public function searchJson(Request $request): JsonResponse
+    {
+        $query = $request->string('q')->trim()->toString();
+        if ($query === '') {
+            return response()->json(['data' => []]);
+        }
+
+        $residents = Resident::query()
+            ->where(function ($builder) use ($query): void {
+                $builder->where('nik', 'like', "%{$query}%")
+                    ->orWhere('nama', 'like', "%{$query}%");
+            })
+            ->orderBy('nama')
+            ->limit(8)
+            ->get(['nik', 'nama', 'tempat_lahir', 'tanggal_lahir']);
+
+        return response()->json(['data' => $residents]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -78,51 +101,24 @@ class ResidentController extends Controller
     public function import(Request $request): RedirectResponse
     {
         $request->validate([
-            'resident_csv' => ['required', 'file', 'mimes:csv,txt'],
+            'resident_csv' => ['required', 'file', 'mimes:csv,txt,xlsx'],
         ]);
 
-        $file = $request->file('resident_csv');
-        $handle = fopen($file->getRealPath(), 'r');
-        if ($handle === false) {
-            return redirect()->route('residents.index')->with('error', 'Gagal membaca file impor.');
+        try {
+            $summary = $this->importer->import($request->file('resident_csv'));
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()->route('residents.index')
+                ->with('error', 'Gagal membaca file impor. Pastikan format dan header file sesuai.');
         }
 
-        $fillables = array_map('strtolower', (new Resident())->getFillable());
-        $columns = [];
-        $imported = 0;
-        $skipped = 0;
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if ($columns === []) {
-                $columns = array_map('strtolower', array_map('trim', $row));
-                if (! in_array('nik', $columns, true)) {
-                    fclose($handle);
-                    return redirect()->route('residents.index')
-                        ->with('error', 'Header CSV harus memuat kolom nik.');
-                }
-                continue;
-            }
-
-            if ($row === [] || (count($row) === 1 && trim($row[0]) === '')) {
-                continue;
-            }
-
-            $row = array_combine($columns, $row);
-            if ($row === false || empty(trim((string) ($row['nik'] ?? '')))) {
-                $skipped++;
-                continue;
-            }
-
-            $row = array_intersect_key($row, array_flip($fillables));
-            $this->residents->saveResident($row);
-            $imported++;
+        $message = "Berhasil mengimpor {$summary['imported']} data penduduk.";
+        if ($summary['updated'] > 0) {
+            $message .= " {$summary['updated']} data diperbarui.";
         }
-
-        fclose($handle);
-
-        $message = "Berhasil mengimpor {$imported} data penduduk.";
-        if ($skipped > 0) {
-            $message .= " {$skipped} baris dilewati karena data tidak lengkap atau NIK kosong.";
+        if ($summary['skipped'] > 0) {
+            $message .= " {$summary['skipped']} baris dilewati karena NIK kosong atau tidak valid.";
         }
 
         return redirect()->route('residents.index')
@@ -166,5 +162,38 @@ class ResidentController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportXlsx()
+    {
+        $columns = (new Resident())->getFillable();
+        $residents = $this->residents->all();
+
+        return response()->streamDownload(function () use ($columns, $residents): void {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Data Penduduk');
+
+            foreach ($columns as $columnIndex => $column) {
+                $sheet->setCellValueByColumnAndRow($columnIndex + 1, 1, $column);
+            }
+
+            foreach ($residents as $rowIndex => $resident) {
+                foreach ($columns as $columnIndex => $column) {
+                    $sheet->setCellValueExplicitByColumnAndRow(
+                        $columnIndex + 1,
+                        $rowIndex + 2,
+                        (string) ($resident->{$column} ?? ''),
+                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
+                    );
+                }
+            }
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+        }, 'residents.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }

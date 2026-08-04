@@ -1,77 +1,39 @@
+Exit code: 0
+Wall time: 0.8 seconds
+Output:
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name') }}</title>
-    <style>
-        body { background: #fafbf7; color: #263322; font-family: Arial, sans-serif; margin: 0; }
-        .sidebar { background: rgb(0, 63, 29); color: #f8f5e8; height: 100vh; left: 0; padding: 24px 16px; position: fixed; top: 0; width: 220px; z-index: 10; box-sizing: border-box; }
-        .sidebar h2 { color: #fff; font-size: 1.05rem; margin: 0 0 28px; }
-        .sidebar a { border-radius: 6px; color: #f8f5e8; display: block; margin: 6px 0; padding: 11px 12px; text-decoration: none; }
-        .sidebar a:hover, .sidebar a.active { background: #405829; color: #fff; }
-        .page-content { margin-left: 220px; min-height: 100vh; }
-        .container { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
-        .card { background: #fff; border: 1px solid #dce5d2; border-radius: 8px; padding: 24px; margin-top: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-        .full { grid-column: 1 / -1; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; }
-        input, select, textarea { border: 1px solid #c5d2b8; border-radius: 5px; box-sizing: border-box; padding: 10px; width: 100%; }
-        textarea { min-height: 90px; resize: vertical; }
-        .button { display: inline-block;background: #FEC51E; border: 0; border-radius: 5px; color: #3d5226; cursor: pointer; font-weight: 600; padding: 11px 18px; }
-        .button.secondary { background: rgb(0, 63, 29); color: #fff; }
-        .alert { border-radius: 5px; margin: 16px 0; padding: 12px 16px; }
-        .success { background: #dcfce7; color: #166534; }
-        .errors { background: #fee2e2; color: #991b1b; }
-        .field-error { color: #991b1b; display: none; font-size: 0.95rem; margin-top: 8px; }
-        .muted { color: #64745d; }
-        .highlighted { animation: highlight-pulse 3s ease-out; border-color: #f59e0b; }
-        @keyframes highlight-pulse {
-        0% { 
-            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.35); 
-            background: rgba(251, 191, 36, 0.35);
-        }
-        33% { 
-            box-shadow: 0 0 0 0px rgba(251, 191, 36, 0.35); 
-            background: rgba(251, 191, 36, 0.35);
-        }
-        67% { 
-            box-shadow: 0 0 0 0px rgba(251, 191, 36, 0); 
-            background: rgba(251, 191, 36, 0);
-        }
-        100% { 
-            box-shadow: 0 0 0 0px rgba(251, 191, 36, 0); 
-            background: none;
-        }
-        }
-        @media (max-width: 680px) { .sidebar { height: auto; position: static; width: 100%; } .sidebar h2 { margin-bottom: 12px; } .sidebar a { display: inline-block; } .page-content { margin-left: 0; } .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-<nav class="sidebar" aria-label="Navigasi utama">
-    <h2>Sidodadi</h2>
-    <a class="active" href="{{ route('documents.create') }}">Buat Dokumen</a>
-    <a href="{{ route('residents.index') }}">Data Penduduk</a>
+<nav class="sidebar position-fixed top-0 start-0 vh-100 p-3" aria-label="Navigasi utama">
+    <h2 class="mb-4">Sidodadi</h2>
+    <a class="active d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('documents.create') }}">Buat Dokumen</a>
+    <a class="d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('residents.index') }}">Data Penduduk</a>
 </nav>
 <main class="page-content">
-<div class="container">
+<div class="container-fluid">
     <h1>Sidodadi Document Generator</h1>
     <p class="muted">Pilih jenis surat, lalu isi data pemohon.</p>
-    <p><a class="button secondary" href="{{ route('residents.index') }}">Lihat data penduduk internal</a></p>
+    <p><a class="button secondary btn btn-success" href="{{ route('residents.index') }}">Lihat data penduduk internal</a></p>
 
     @if (session('success'))
-        <div class="alert success">{{ session('success') }}</div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     @if (session('error'))
-        <div class="alert errors">
+        <div class="alert alert-danger">
             <strong>Terjadi kesalahan:</strong>
             <p>{{ session('error') }}</p>
         </div>
     @endif
 
     @if ($errors->any())
-        <div class="alert errors">
+        <div class="alert alert-danger">
             <strong>Periksa kembali data berikut:</strong>
             <ul>
                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
@@ -79,53 +41,55 @@
         </div>
     @endif
 
-    <form method="GET" action="{{ route('documents.create') }}" class="card">
-        <label for="type">Jenis dokumen</label>
-        <select id="type" name="type" onchange="this.form.submit()">
+    <form method="GET" action="{{ route('documents.create') }}" class="card mt-4 p-4">
+        <label class="form-label" for="type">Jenis dokumen</label>
+        <select class="form-select" id="type" name="type" onchange="this.form.submit()">
             @foreach ($templates as $template)
                 <option value="{{ $template->type }}" @selected($template->type === $selectedType)>{{ $template->name }}</option>
             @endforeach
         </select>
     </form>
 
-    <form method="POST" action="{{ route('documents.store') }}" class="card">
+    <form method="POST" action="{{ route('documents.store') }}" class="card mt-4 p-4">
         @csrf
         <input type="hidden" name="document_type" value="{{ $selectedType }}">
-        <div class="grid">
+        <div class="row g-3">
             @foreach ($fields as $field)
-                <div class="{{ $field['type'] === 'textarea' ? 'full' : '' }}">
-                    <label for="{{ $field['name'] }}">{{ $field['label'] }}</label>
+                <div class="{{ $field['type'] === 'textarea' ? 'col-12' : 'col-md-6' }}">
+                    <label class="form-label" for="{{ $field['name'] }}">{{ $field['label'] }}</label>
                     @if ($field['name'] === 'nik')
-                        <div style="display:flex; gap:10px; align-items:flex-end;">
-                            <input id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}" style="flex:1;">
-                            <button id="lookup_nik_button" type="button" class="button secondary">Lookup NIK</button>
+                        <div class="d-flex align-items-end gap-2">
+                            <input class="form-control flex-grow-1" id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
+                            <button id="lookup_nik_button" type="button" class="button secondary btn btn-success flex-shrink-0">Lookup NIK</button>
                         </div>
-                        <div id="lookupMessage" class="muted" style="margin-top:8px;"></div>
+                        <div id="lookupMessage" class="muted form-text mt-2"></div>
                     @elseif ($field['type'] === 'textarea')
-                        <textarea id="{{ $field['name'] }}" name="{{ $field['name'] }}" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($field['name']) }}</textarea>
+                        <textarea class="form-control" id="{{ $field['name'] }}" name="{{ $field['name'] }}" placeholder="{{ $field['placeholder'] ?? '' }}">{{ old($field['name']) }}</textarea>
                     @elseif ($field['type'] === 'select')
-                        <select id="{{ $field['name'] }}" name="{{ $field['name'] }}">
+                        <select class="form-select" id="{{ $field['name'] }}" name="{{ $field['name'] }}">
                             <option value="">Pilih...</option>
                             @foreach ($field['options'] as $option)
                                 <option value="{{ $option }}" @selected(old($field['name']) === $option)>{{ $option }}</option>
                             @endforeach
                         </select>
                     @else
-                        <input id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
+                        <input class="form-control" id="{{ $field['name'] }}" type="{{ $field['type'] }}" name="{{ $field['name'] }}" value="{{ old($field['name']) }}" placeholder="{{ $field['placeholder'] ?? '' }}">
                     @endif
-                    @error($field['name']) <small class="errors field-error" style="display: block;">{{ $message }}</small> @else <small class="errors field-error" id="{{ $field['name'] }}_error"></small> @enderror
+                    @error($field['name']) <small class="invalid-feedback d-block">{{ $message }}</small> @else <small class="invalid-feedback field-error" id="{{ $field['name'] }}_error"></small> @enderror
                 </div>
             @endforeach
         </div>
 
-        <div class="card" style="margin-top: 16px;">
-            <label>
-                <input type="checkbox" name="save_as_resident" value="1" @checked(old('save_as_resident'))>
+        <div class="card mt-3 p-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="save_as_resident" value="1" @checked(old('save_as_resident'))>
+                <label class="form-check-label">
                 Simpan data penduduk ini ke database resident saat dokumen dibuat
-            </label>
+                </label>
+            </div>
         </div>
 
-        <div id="documentStatusCard" class="card" style="margin-top: 16px; display: none;">
+        <div id="documentStatusCard" class="card mt-3 p-3" style="display: none;">
             <div id="documentStatusMessage" class="muted"></div>
             <div id="documentDownloadLink"></div>
         </div>
@@ -296,7 +260,7 @@
                 };
             });
         </script>
-        <p><button class="button" type="submit">Simpan data pemohon</button></p>
+        <p><button class="button btn btn-warning" type="submit">Simpan data pemohon</button></p>
     </form>
 </div>
 </main>

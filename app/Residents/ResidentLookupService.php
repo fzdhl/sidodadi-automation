@@ -5,6 +5,7 @@ namespace App\Residents;
 use App\Models\Resident;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class ResidentLookupService
 {
@@ -29,6 +30,19 @@ final class ResidentLookupService
     public function all(): Collection
     {
         return Resident::orderBy('nama')->get();
+    }
+
+    public function paginate(string $query, int $perPage = 25): LengthAwarePaginator
+    {
+        return Resident::query()
+            ->when($query !== '', function ($builder) use ($query): void {
+                $builder->where(function ($search) use ($query): void {
+                    $search->where('nik', 'like', "%{$query}%")
+                        ->orWhere('nama', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('nama')
+            ->paginate($perPage);
     }
 
     public function saveResident(array $data): Resident
