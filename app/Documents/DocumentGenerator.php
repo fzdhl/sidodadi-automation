@@ -3,6 +3,7 @@
 namespace App\Documents;
 
 use Carbon\Carbon;
+use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
 
@@ -65,6 +66,83 @@ final class DocumentGenerator
         $this->assertValidDocx($outputPath);
 
         return $outputPath;
+    }
+
+    public function renderPreviewHtml(string $type, array $values): string
+    {
+        $temporaryPath = $this->buildTemporaryDocument($type, $values);
+
+        try {
+            $phpWord = IOFactory::load($temporaryPath);
+            $writer = IOFactory::createWriter($phpWord, 'HTML');
+
+            ob_start();
+            $writer->save('php://output');
+            $html = ob_get_clean();
+
+            if ($html === false) {
+                throw new RuntimeException('Unable to render preview HTML.');
+            }
+
+            if (str_starts_with($html, "\xFF\xFEL") || str_starts_with($html, "\xFE\xFF")) {
+                $html = mb_convert_encoding($html, 'UTF-8', 'UTF-16');
+            }
+
+            if (str_starts_with($html, "\xEF\xBB\xBF")) {
+                $html = substr($html, 3);
+            }
+
+            return $html;
+        } finally {
+            if (is_file($temporaryPath)) {
+                unlink($temporaryPath);
+            }
+        }
+    }
+
+    private function buildTemporaryDocument(string $type, array $values): string
+    {
+        $template = $this->templates->get($type);
+
+        if (! is_file($template->path)) {
+            throw new RuntimeException("Document template does not exist: {$template->path}");
+        }
+
+        if (strtolower(pathinfo($template->path, PATHINFO_EXTENSION)) !== 'docx') {
+            throw new RuntimeException("Document template must be a .docx file: {$template->path}");
+        }
+
+        $normalizedTemplate = $this->normalizeTemplateMacros($template->path);
+        $temporaryPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('sidodadi-preview-', true).'.docx';
+
+        try {
+            $processor = new TemplateProcessor($normalizedTemplate);
+            $processor->setMacroChars('{{', '}}');
+            $values = $this->formatDateFields($values, $type);
+            if (! isset($values['ttl']) && isset($values['tempat_lahir'], $values['tanggal_lahir'])) {
+                $values['ttl'] = $values['tempat_lahir'].', '.$values['tanggal_lahir'];
+            }
+
+            $uppercase = (array) config('documents.uppercase_placeholders', []);
+            if ($uppercase !== []) {
+                foreach ($values as $key => $value) {
+                    if (is_string($value) && in_array($key, $uppercase, true)) {
+                        $values[$key] = mb_strtoupper($value, 'UTF-8');
+                    }
+                }
+            }
+
+            $processor->setValues($this->sanitizeValuesForXml($values));
+            $processor->saveAs($temporaryPath);
+        } finally {
+            if (is_file($normalizedTemplate)) {
+                unlink($normalizedTemplate);
+            }
+        }
+
+        $this->assertValidDocx($temporaryPath);
+
+        return $temporaryPath;
     }
 
     private function normalizeTemplateMacros(string $templatePath): string

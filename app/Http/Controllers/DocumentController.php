@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Documents\DocumentGenerator;
 use App\Documents\DocumentTemplateRegistry;
 use App\Http\Requests\DocumentInputRequest;
+use App\Http\Requests\DocumentPreviewRequest;
 use App\Residents\ResidentLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -106,6 +108,35 @@ class DocumentController extends Controller
             $filename,
             ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
         )->deleteFileAfterSend(true);
+    }
+
+    public function preview(DocumentPreviewRequest $request): JsonResponse
+    {
+        $type = $request->input('document_type');
+        $values = $request->except(['_token', 'document_type', 'save_as_resident']);
+
+        try {
+            $html = $this->generator->renderPreviewHtml($type, $values);
+        } catch (\Throwable $exception) {
+            $referenceId = 'DOCPREVIEW-'.Str::upper(Str::substr((string) Str::uuid(), 0, 8));
+            Log::error('Document preview failed', [
+                'reference_id' => $referenceId,
+                'document_type' => $type,
+                'exception' => $exception->getMessage(),
+                'exception_class' => class_basename($exception),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+            report($exception);
+
+            $response = ['message' => 'Tidak dapat memuat preview dokumen saat ini.'];
+            if (config('app.debug')) {
+                $response['developer_message'] = $exception->getMessage();
+            }
+
+            return response()->json($response, 500);
+        }
+
+        return response()->json(['html' => $html]);
     }
 
     public function download(string $filename): BinaryFileResponse|RedirectResponse

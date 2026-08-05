@@ -8,15 +8,15 @@ use Tests\TestCase;
 
 class DocumentFormTest extends TestCase
 {
-    public function test_document_form_lists_the_four_document_types(): void
+    public function test_document_form_lists_the_twenty_document_types(): void
     {
         $response = $this->get(route('documents.create'));
 
         $response->assertOk()
-            ->assertSee('Surat Keterangan Domisili')
-            ->assertSee('Surat Keterangan Usaha')
-            ->assertSee('Surat Keterangan Tidak Mampu')
-            ->assertSee('Surat Keterangan');
+            ->assertSee('Keterangan Domisili')
+            ->assertSee('Keterangan Usaha')
+            ->assertSee('Keterangan Tidak Mampu')
+            ->assertSee('Keterangan Biasa');
     }
 
     public function test_business_letter_form_accepts_valid_applicant_data(): void

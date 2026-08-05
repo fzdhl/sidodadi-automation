@@ -75,7 +75,48 @@ body {
 .container-fluid {
     margin: 0 auto;
     /* max-width: 900px; */
-    padding: 32px 20px;
+    padding: 0 20px 32px;
+}
+
+.sticky-heading {
+    background: #fafbf7;
+    position: relative;
+    z-index: 1015;
+    padding: 20px 20px 20px 24px;
+    margin-bottom: 16px;
+    border-radius: 0 0 14px 14px;
+    transition: background 180ms ease, color 180ms ease;
+}
+
+.sticky-heading h1 {
+    margin-bottom: 0;
+    transition: none;
+}
+
+.sticky-heading p {
+    margin-bottom: 0;
+    transition: none;
+}
+
+.sticky-heading.scrolled {
+    background: var(--sidodadi-green-light);
+    position: sticky;
+    top: 0;
+    padding: 12px 20px 12px 24px;
+    color: #fff;
+    border-radius: 0 0 14px 14px;
+}
+
+.sticky-heading.scrolled h1 {
+    font-size: 1.45rem;
+    color: #fff;
+    transition: none;
+}
+
+.sticky-heading.scrolled p {
+    font-size: 0.92rem;
+    color: #fff;
+    transition: none;
 }
 
 .card {
@@ -94,6 +135,69 @@ body {
 
 .full {
     grid-column: 1 / -1;
+}
+
+.document-editor-layout {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+}
+
+.document-preview-panel {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+    width: 100%;
+}
+
+.document-preview-panel .card {
+    min-height: 420px;
+    margin-top: 16px;
+}
+
+.document-preview-panel .card {
+    min-height: 420px;
+}
+
+.preview-content {
+    min-height: 260px;
+    max-height: calc(100vh - 320px);
+    overflow: auto;
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--sidodadi-border);
+    padding: 16px;
+}
+
+.preview-content table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    min-width: 0;
+}
+
+.preview-content th,
+.preview-content td {
+    min-width: 0;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.preview-content th,
+.preview-content td {
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    padding: 0.5rem;
+}
+
+.preview-content img,
+.preview-content svg {
+    max-width: 100%;
+    height: auto;
 }
 
 label {
@@ -197,6 +301,15 @@ th {
 
     .page-content {
         margin-left: 0;
+    }
+
+    .document-editor-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .document-preview-panel {
+        position: static;
+        top: auto;
     }
 
     .grid {

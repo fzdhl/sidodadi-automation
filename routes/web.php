@@ -8,6 +8,7 @@ Route::redirect('/', '/documents/create');
 
 Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
 Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+Route::post('/documents/preview', [DocumentController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/download/{filename}', [DocumentController::class, 'download'])->name('documents.download');
 
 Route::get('/residents', [ResidentController::class, 'index'])->name('residents.index');
