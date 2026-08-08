@@ -126,5 +126,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 350);
         }
     }
+
+    // Sticky Heading Scroll Morphing Handler (Digdaya / Gendongkulon inspired)
+    const initStickyHeadingScroll = () => {
+        const stickyElements = document.querySelectorAll('.sticky-heading, .resident-storage-summary');
+        if (!stickyElements.length) return;
+
+        const handleScroll = () => {
+            const isScrolled = window.scrollY > 15;
+            stickyElements.forEach(el => {
+                if (isScrolled) {
+                    el.classList.add('scrolled');
+                } else {
+                    el.classList.remove('scrolled');
+                }
+            });
+        };
+
+        window.removeEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+    };
+
+    initStickyHeadingScroll();
+    document.addEventListener('spa:loaded', initStickyHeadingScroll);
 });
+
 
