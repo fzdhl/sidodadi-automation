@@ -1,0 +1,19 @@
+{
+  "application_name": "Sidodadi Document Generator",
+  "application_title": "Sidodadi Document Generator",
+  "web_server": {
+    "listen_on": ["127.0.0.1", 8000],
+    "www_directory": "www",
+    "router": "public/index.php"
+  },
+  "window": {
+    "title": "Sidodadi Document Generator",
+    "min_width": 1024,
+    "min_height": 768,
+    "width": 1280,
+    "height": 840
+  },
+  "browser": {
+    "default_encoding": "UTF-8"
+  }
+}
