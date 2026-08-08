@@ -301,6 +301,126 @@ tr:hover td {
     border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
+/* ==========================================
+   Navigation Tabs & Pills
+   ========================================== */
+.nav-tabs {
+    border-bottom: 1px solid var(--sidodadi-glass-border) !important;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: rgba(248, 245, 232, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    font-size: 0.95rem;
+    transition: all 0.25s ease !important;
+}
+
+.nav-tabs .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, rgba(84, 114, 52, 0.75) 0%, rgba(0, 63, 29, 0.95) 100%) !important;
+    color: var(--sidodadi-gold) !important;
+    border: 1px solid rgba(254, 197, 30, 0.45) !important;
+    border-bottom: 1px solid transparent !important;
+    box-shadow: 0 -4px 18px rgba(254, 197, 30, 0.25) !important;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    gap: 4px;
+}
+
+.page-item .page-link {
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--sidodadi-glass-border) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.page-item.active .page-link {
+    background: linear-gradient(135deg, #FEC51E 0%, #d49f05 100%) !important;
+    color: #0b1a08 !important;
+    border-color: #FEC51E !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 12px rgba(254, 197, 30, 0.4) !important;
+}
+
+.page-item.disabled .page-link {
+    background: rgba(0, 0, 0, 0.2) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.page-item .page-link:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: var(--sidodadi-gold) !important;
+}
+
+/* Alerts */
+.alert {
+    backdrop-filter: blur(16px);
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.alert-success {
+    background: rgba(14, 78, 38, 0.8) !important;
+    color: #f0fdf4 !important;
+    border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+.alert-danger {
+    background: rgba(127, 29, 29, 0.8) !important;
+    color: #fef2f2 !important;
+    border-color: rgba(248, 113, 113, 0.35) !important;
+}
+
+/* File Inputs */
+input[type="file"]::file-selector-button {
+    background: linear-gradient(135deg, rgba(84, 114, 52, 0.85) 0%, rgba(0, 63, 29, 0.95) 100%) !important;
+    color: var(--sidodadi-gold) !important;
+    border: 1px solid rgba(254, 197, 30, 0.35) !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    margin-right: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: linear-gradient(135deg, #FEC51E 0%, #d49f05 100%) !important;
+    color: #0b1a08 !important;
+}
+
+/* Autocomplete List Group */
+.list-group-item {
+    background: rgba(3, 28, 14, 0.95) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+}
+
+.list-group-item:hover, .list-group-item.active {
+    background: linear-gradient(135deg, rgba(84, 114, 52, 0.8) 0%, rgba(0, 63, 29, 0.95) 100%) !important;
+    color: var(--sidodadi-gold) !important;
+}
+
+
 /* Layout Grids */
 .grid {
     display: grid;
