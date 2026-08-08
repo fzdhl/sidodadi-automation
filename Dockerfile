@@ -10,8 +10,6 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     zip \
     unzip \
-    nodejs \
-    npm \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -35,13 +33,7 @@ COPY composer.json composer.lock ./
 # Install PHP dependencies
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install Node dependencies and build assets
-RUN npm ci && npm run build
-
-# Copy rest of the application
+# Copy rest of the application (including pre-built public/build assets)
 COPY . .
 
 # Set permissions
