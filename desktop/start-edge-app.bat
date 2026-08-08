@@ -28,11 +28,14 @@ if exist "%~dp0php\php.exe" (
     set PHP_ARGS=
 )
 
+REM Kill any stale PHP server instance on port 8000
+powershell -Command "Stop-Process -Name php -ErrorAction SilentlyContinue" >nul 2>&1
+
 REM Start PHP Built-in Web Server silently
 start "SidodadiPHPServer" /B %PHP_BIN% %PHP_ARGS% -S %HOST%:%PORT% -t "%WWW_PATH%\public" >nul 2>&1
 
-REM Wait 1 second for PHP server to initialize
-timeout /t 1 /nobreak >nul
+REM Wait 2 seconds for PHP server to initialize
+timeout /t 2 /nobreak >nul
 
 REM Detect Microsoft Edge or Chrome browser path for App Mode
 set BROWSER=
@@ -51,6 +54,3 @@ if defined BROWSER (
 ) else (
     start %APP_URL%
 )
-
-REM Cleanup: Stop PHP server when window is closed
-powershell -Command "Stop-Process -Name php -ErrorAction SilentlyContinue" >nul 2>&1

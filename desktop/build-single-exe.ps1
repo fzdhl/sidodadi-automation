@@ -1,19 +1,21 @@
-# PowerShell Script to build a Single-File Portable Executable (Sidodadi-Generator.exe)
-# using Windows Built-in IExpress tool.
+# PowerShell Script to compile desktop/release into a native Single-File EXE (Sidodadi-Generator.exe)
+# using built-in Windows C# compiler (csc.exe).
 
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path "$PSScriptRoot\.."
 $releaseDir = Join-Path $repoRoot "desktop\release"
 $outputExe = Join-Path $repoRoot "desktop\Sidodadi-Generator.exe"
-$sedFile = Join-Path $repoRoot "desktop\iexpress.sed"
+$payloadZip = Join-Path $repoRoot "desktop\payload.zip"
+$csFile = Join-Path $repoRoot "desktop\Launcher.cs"
 
 Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "  Building Single-File Executable: Sidodadi-Generator.exe" -ForegroundColor Cyan
+Write-Host "  Building Single-File Portable EXE: Sidodadi-Generator.exe" -ForegroundColor Cyan
 Write-Host "========================================================" -ForegroundColor Cyan
 
+# Step 1: Ensure desktop/release exists
 if (-not (Test-Path $releaseDir)) {
-    Write-Host "[INFO] desktop\release directory not found. Running package-edge-app.bat first..." -ForegroundColor Yellow
+    Write-Host "[1/3] desktop\release directory not found. Packaging release first..." -ForegroundColor Yellow
     cmd /c "$repoRoot\desktop\package-edge-app.bat < NUL"
 }
 
@@ -23,79 +25,44 @@ if (-not (Test-Path "$releaseDir\php\php.exe")) {
     exit 1
 }
 
-Write-Host "[1/2] Scanning release files..." -ForegroundColor Green
+# Step 2: Zip desktop/release folder into payload.zip using tar.exe
+Write-Host "[2/3] Compressing application payload into payload.zip with tar.exe..." -ForegroundColor Green
+if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }
 
-# Collect all files recursively in releaseDir
-$files = Get-ChildItem -Path $releaseDir -Recurse -File
+tar -caf "$payloadZip" -C "$releaseDir" .
 
-# Group files by their parent directory
-$groups = $files | Group-Object DirectoryName
+# Verify zip integrity before compiling
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$verifier = [System.IO.Compression.ZipFile]::OpenRead($payloadZip)
+$entryCount = $verifier.Entries.Count
+$verifier.Dispose()
 
-# Generate SED configuration
-$sedContent = @()
-$sedContent += "[Version]"
-$sedContent += "Class=IExpress"
-$sedContent += "SEDVersion=3.0"
-$sedContent += "[Options]"
-$sedContent += "PackagePurpose=InstallApp"
-$sedContent += "ShowInstallProgramWindow=0"
-$sedContent += "HideExtractAnimation=1"
-$sedContent += "UseLongFileName=1"
-$sedContent += "InsideCompressed=1"
-$sedContent += "CAB_FixedSize=0"
-$sedContent += "CAB_ResvCodeSigning=0"
-$sedContent += "RebootMode=N"
-$sedContent += "InstallPrompt=%InstallPrompt%"
-$sedContent += "DisplayLicense=%DisplayLicense%"
-$sedContent += "FinishMessage=%FinishMessage%"
-$sedContent += "TargetName=%TargetName%"
-$sedContent += "FriendlyName=%FriendlyName%"
-$sedContent += "AppLaunched=%AppLaunched%"
-$sedContent += "PostInstallCmd=%PostInstallCmd%"
-$sedContent += "AdminQuietInstCmd=%AdminQuietInstCmd%"
-$sedContent += "UserQuietInstCmd=%UserQuietInstCmd%"
-$sedContent += "SourceFiles=SourceFiles"
-$sedContent += "[Strings]"
-$sedContent += "InstallPrompt="
-$sedContent += "DisplayLicense="
-$sedContent += "FinishMessage="
-$sedContent += "TargetName=$outputExe"
-$sedContent += "FriendlyName=Sidodadi Document Generator"
-$sedContent += "AppLaunched=wscript.exe //nologo Start-App.vbs"
-$sedContent += "PostInstallCmd=<None>"
-$sedContent += "AdminQuietInstCmd="
-$sedContent += "UserQuietInstCmd="
-$sedContent += "[SourceFiles]"
+$zipSize = (Get-Item $payloadZip).Length / 1MB
+Write-Host "      Payload compressed size: $([math]::Round($zipSize, 2)) MB ($entryCount entries verified)" -ForegroundColor Gray
 
-for ($i = 0; $i -lt $groups.Count; $i++) {
-    $dirPath = $groups[$i].Name
-    if (-not $dirPath.EndsWith("\")) { $dirPath += "\" }
-    $sedContent += "SourceFiles$i=$dirPath"
+# Step 3: Compile C# launcher into single-file EXE using csc.exe
+Write-Host "[3/3] Compiling native executable with C# Compiler (csc.exe)..." -ForegroundColor Green
+
+$cscPath = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+if (-not (Test-Path $cscPath)) {
+    $cscPath = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
 }
 
-for ($i = 0; $i -lt $groups.Count; $i++) {
-    $sedContent += "[SourceFiles$i]"
-    foreach ($file in $groups[$i].Group) {
-        $sedContent += "$($file.Name)="
-    }
-}
+$icoFile = Join-Path $repoRoot "desktop\app.ico"
+$iconFlag = if (Test-Path $icoFile) { "/win32icon:`"$icoFile`"" } else { "" }
+$compileCmd = "& `"$cscPath`" /target:winexe /out:`"$outputExe`" $iconFlag /resource:`"$payloadZip`",payload.zip /r:System.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /r:System.Management.dll /optimize+ `"$csFile`""
+Invoke-Expression $compileCmd
 
-Set-Content -Path $sedFile -Value ($sedContent -join "`r`n") -Encoding ASCII
+# Cleanup temp payload zip
+Remove-Item $payloadZip -Force -ErrorAction SilentlyContinue
 
-Write-Host "[2/2] Compiling single-file EXE using IExpress..." -ForegroundColor Green
-$iexpressPath = "$env:SystemRoot\System32\iexpress.exe"
-$process = Start-Process -FilePath $iexpressPath -ArgumentList "/N `"$sedFile`"" -Wait -NoNewWindow -PassThru
-
-if ($process.ExitCode -eq 0 -and (Test-Path $outputExe)) {
-    $exeSize = (Get-Item $outputExe).Length / 1MB
+if (Test-Path $outputExe) {
+    $finalSize = (Get-Item $outputExe).Length / 1MB
     Write-Host "========================================================" -ForegroundColor Green
-    Write-Host " SUCCESS! Executable created successfully!" -ForegroundColor Green
-    Write-Host " File Location: $outputExe" -ForegroundColor Green
-    Write-Host " File Size    : $([math]::Round($exeSize, 2)) MB" -ForegroundColor Green
+    Write-Host " SUCCESS! Native Single-File EXE Created!" -ForegroundColor Green
+    Write-Host " Location : $outputExe" -ForegroundColor Green
+    Write-Host " File Size: $([math]::Round($finalSize, 2)) MB" -ForegroundColor Green
     Write-Host "========================================================" -ForegroundColor Green
 } else {
-    Write-Host "[ERROR] IExpress failed to build executable." -ForegroundColor Red
+    Write-Host "[ERROR] Compilation failed to produce output executable." -ForegroundColor Red
 }
-
-# Clean up temp SED file
-Remove-Item $sedFile -Force -ErrorAction SilentlyContinue

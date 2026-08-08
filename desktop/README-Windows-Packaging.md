@@ -1,38 +1,40 @@
 # Windows Desktop Packaging Guide - Sidodadi Document Generator
 
-Dokumen ini menjelaskan dua cara untuk memaketkan aplikasi Laravel ini menjadi aplikasi desktop Windows *offline-first*.
+Dokumen ini menjelaskan cara memaketkan aplikasi Laravel ini menjadi **Single-File Portable EXE (`Sidodadi-Generator.exe`)** yang sangat cocok untuk perangkat desa.
 
 ---
 
-## 🚀 Metode 1: Ultra-Lightweight Edge App Mode (Rekomendasi Utama)
+## 🌟 Metode Utama: Single-File Portable EXE (`Sidodadi-Generator.exe`)
 
-Metode ini memanfaatkan **Microsoft Edge App Mode** (bawaan Windows 10/11) dan **PHP Portable**, sehingga **TIDAK memerlukan browser Chromium tambahan**.
+Metode ini membungkus seluruh aplikasi (PHP Portable + Aplikasi Laravel + SQLite + Launcher) ke dalam **1 file `.exe` tunggal**.
 
-- **Ukuran Total Paket**: **~25 MB - 35 MB** (Hemat hingga 90% dibanding PHP Desktop Chromium).
-- **Keunggulan**: Jendela aplikasi tampil penuh seperti aplikasi native Windows tanpa address bar/tab browser, hemat RAM, dan cepat.
+- **Ukuran File**: **~30 - 35 MB**
+- **Keunggulan**: Perangkat desa tidak perlu melakukan instalasi dan tidak bingung dengan banyak file/folder. Cukup simpan file `Sidodadi-Generator.exe` di Flashdisk atau Desktop dan klik dua kali!
 
-### Langkah Pengemasan:
+### Langkah Pembuatan File `.exe`:
+
+1. Pastikan folder `desktop\release\php` sudah berisi PHP Portable.
+2. Jalankan skrip pembentuk `.exe`:
+   ```cmd
+   desktop\make-portable-exe.bat
+   ```
+3. Skrip akan menghasilkan file eksekusi tunggal:
+   **`desktop\Sidodadi-Generator.exe`**
+
+---
+
+## 🚀 Metode Folder Rilis: Edge App Mode
+
+Jika Anda ingin mendistribusikan folder rilis biasa:
 
 1. Jalankan skrip packaging:
-   ```bat
+   ```cmd
    desktop\package-edge-app.bat
    ```
-2. Skrip akan membuat folder `desktop\release` berisi aplikasi terkompilasi (`www/`) dan file *launcher* (`Start-App.vbs`).
-3. Unduh **PHP 8.2 / 8.3 NTS (Non-Thread Safe) Zip (~20 MB)** dari [https://windows.php.net/download/](https://windows.php.net/download/).
-4. Ekstrak isi file zip PHP tersebut ke dalam folder `desktop\release\php\`.
-5. Pengguna cukup melakukan klik-ganda pada file `Start-App.vbs` untuk membuka aplikasi secara *offline*.
-
----
-
-## 📦 Metode 2: PHP Desktop Chrome Runtime (Legacy)
-
-Metode ini menyertakan browser Chromium Embedded Framework (CEF) di dalam rilis.
-
-- **Ukuran Total Paket**: **~250 MB - 350 MB**
-- **Langkah**: Jalankan `desktop\package.bat` dan ekstrak runtime PHP Desktop ke `desktop\release`.
+2. Pengguna membuka aplikasi dengan klik-ganda pada `Start-App.vbs`.
 
 ---
 
 ## 🧹 Git Best Practices
 
-Folder `desktop/release` telah ditambahkan ke `.gitignore` sehingga file kompilasi akhir tidak akan mengotori git commit history repository Anda.
+Folder `desktop/release` dan file `.exe` rilis telah ditambahkan ke `.gitignore` sehingga tidak mengotori riwayat commit Git Anda.

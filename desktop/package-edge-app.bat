@@ -31,8 +31,8 @@ set WWW_ROOT=%RELEASE_ROOT%\www
 if exist "%RELEASE_ROOT%" rd /s /q "%RELEASE_ROOT%"
 mkdir "%WWW_ROOT%"
 
-echo [1/4] Optimizing PHP dependencies (removing dev packages)...
-call composer install --no-dev --optimize-autoloader >nul 2>&1
+echo [1/4] Optimizing PHP dependencies...
+if not exist vendor\autoload.php call composer install --no-dev --optimize-autoloader >nul 2>&1
 
 echo [2/4] Copying application code and assets...
 robocopy "%CD%\app" "%WWW_ROOT%\app" /e /njh /njs /ndl /nc /ns >nul
