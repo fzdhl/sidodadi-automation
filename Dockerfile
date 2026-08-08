@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libzip-dev \
     libxml2-dev \
+    libsqlite3-dev \
     zip \
     unzip \
     nodejs \
