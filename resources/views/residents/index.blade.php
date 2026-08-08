@@ -4,8 +4,10 @@
 
 @section('content')
 <div class="container-fluid">
-    <h1 class="fw-bold">Data Penduduk</h1>
-    <p class="muted">Kelola data penduduk untuk lookup NIK dan pengisian dokumen otomatis.</p>
+    <div class="page-heading sticky-heading">
+        <h1 class="fw-bold">Data Penduduk</h1>
+        <p class="muted">Kelola data penduduk untuk lookup NIK dan pengisian dokumen otomatis.</p>
+    </div>
 
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
