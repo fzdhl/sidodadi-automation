@@ -56,9 +56,11 @@ fi
 chmod 664 /app/database/database.sqlite
 
 # Clear any cached config (important!)
-echo "==> Clearing old config cache..."
+echo "==> Clearing old cache..."
 php artisan config:clear
 php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
 
 # Run migrations
 echo "==> Running migrations..."
