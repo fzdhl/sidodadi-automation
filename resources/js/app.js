@@ -90,4 +90,41 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('popstate', (e) => {
         navigateTo(window.location.href, false);
     });
+
+    // Web Splash Screen Handler
+    const splashScreen = document.getElementById('splash-screen');
+    if (splashScreen) {
+        const hasVisited = sessionStorage.getItem('sidodadi_splash_shown');
+        if (hasVisited) {
+            splashScreen.style.display = 'none';
+        } else {
+            const progressBar = document.getElementById('splash-progress-bar');
+            const statusText = document.getElementById('splash-status');
+
+            const steps = [
+                { progress: '35%', text: 'Menyiapkan berkas sistem...' },
+                { progress: '70%', text: 'Memuat data kependudukan...' },
+                { progress: '100%', text: 'Sistem siap!' }
+            ];
+
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    if (progressBar) progressBar.style.width = steps[currentStep].progress;
+                    if (statusText) statusText.innerText = steps[currentStep].text;
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        splashScreen.classList.add('fade-out');
+                        sessionStorage.setItem('sidodadi_splash_shown', 'true');
+                        setTimeout(() => {
+                            splashScreen.style.display = 'none';
+                        }, 600);
+                    }, 300);
+                }
+            }, 350);
+        }
+    }
 });
+
