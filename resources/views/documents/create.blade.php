@@ -1,18 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body>
-<nav class="sidebar position-fixed top-0 start-0 vh-100 p-3" aria-label="Navigasi utama">
-    <h2 class="mb-4 fw-bolder">SIDODADI</h2>
-    <a class="active d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('documents.create') }}">Buat Dokumen</a>
-    <a class="d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('residents.index') }}">Data Penduduk</a>
-</nav>
-<main class="page-content">
+@extends('layouts.app')
+
+@section('title', 'Buat Dokumen - ' . config('app.name'))
+
+@section('content')
 <div class="container-fluid">
     <div class="page-heading sticky-heading">
         <h1 class="fw-bold">Buat Dokumen</h1>
@@ -122,7 +112,7 @@
     </form>
 
     <script>
-            document.addEventListener('DOMContentLoaded', function () {
+        const initDocumentForm = function () {
                 const stickyHeading = document.querySelector('.sticky-heading');
                 const lookupButton = document.getElementById('lookup_nik_button');
                 const nikInput = document.getElementById('nik');
@@ -554,11 +544,11 @@
 
                 attachPreviewListeners();
                 renderPreview();
-            });
-        </script>
+        };
+        document.addEventListener('DOMContentLoaded', initDocumentForm);
+        document.addEventListener('spa:loaded', initDocumentForm);
+    </script>
         <p><button class="button btn btn-warning" type="submit">Simpan data pemohon</button></p>
     </form>
 </div>
-</main>
-</body>
-</html>
+@endsection

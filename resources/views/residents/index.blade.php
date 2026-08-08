@@ -1,18 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Penduduk | {{ config('app.name') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body>
-<nav class="sidebar position-fixed top-0 start-0 vh-100 p-3" aria-label="Navigasi utama">
-    <h2 class="mb-4">Sidodadi</h2>
-    <a class="d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('documents.create') }}">Buat Dokumen</a>
-    <a class="active d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('residents.index') }}">Data Penduduk</a>
-</nav>
-<main class="page-content">
+@extends('layouts.app')
+
+@section('title', 'Data Penduduk | ' . config('app.name'))
+
+@section('content')
 <div class="container-fluid">
     <h1 class="fw-bold">Data Penduduk</h1>
     <p class="muted">Kelola data penduduk untuk lookup NIK dan pengisian dokumen otomatis.</p>
@@ -164,7 +154,7 @@
 </div>
 </main>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    const initResidentSearch = function () {
         const input = document.getElementById('search');
         const suggestions = document.getElementById('residentSuggestions');
         const searchForm = input?.closest('form');
@@ -226,7 +216,8 @@
                 hideSuggestions();
             }
         });
-    });
+    };
+    document.addEventListener('DOMContentLoaded', initResidentSearch);
+    document.addEventListener('spa:loaded', initResidentSearch);
 </script>
-</body>
-</html>
+@endsection

@@ -1,1 +1,1 @@
-*.sqlite*
+# database.sqlite is tracked intentionally for deployment
