@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="page-heading sticky-heading">
-        <h1 class="fw-bold">Buat Dokumen</h1>
+        <h1 class="fw-bold">Buat Surat</h1>
         <p class="muted">Pilih jenis surat, lalu isi data pemohon.</p>
     </div>
 
@@ -30,7 +30,7 @@
     @endif
 
     <form method="GET" action="{{ route('documents.create') }}" class="card mt-4 p-4">
-        <label class="form-label" for="type">Jenis dokumen</label>
+        <label class="form-label" for="type">Jenis Surat</label>
         <select class="form-select" id="type" name="type" onchange="this.form.submit()">
             @foreach ($templates as $template)
                 <option value="{{ $template->type }}" @selected($template->type === $selectedType)>{{ $template->name }}</option>
@@ -132,31 +132,17 @@
 
                 let stickyTriggerOffset = getStickyTriggerOffset();
 
-                const updateStickyHeader = () => {
-                    if (! stickyHeading) {
-                        return;
-                    }
-
-                    const shouldStick = window.scrollY >= stickyTriggerOffset;
-                    stickyHeading.classList.toggle('scrolled', shouldStick);
-                };
+                // No-op: prevent visual changes on scroll for sticky heading
+                const updateStickyHeader = () => {};
 
                 const refreshStickyTriggerOffset = () => {
                     if (! stickyHeading) {
                         return;
                     }
-
-                    const wasScrolled = stickyHeading.classList.contains('scrolled');
-                    stickyHeading.classList.remove('scrolled');
                     stickyTriggerOffset = getStickyTriggerOffset();
-                    if (wasScrolled) {
-                        stickyHeading.classList.add('scrolled');
-                    }
-                    updateStickyHeader();
                 };
 
-                updateStickyHeader();
-                window.addEventListener('scroll', updateStickyHeader);
+                // No scroll visual changes — don't attach scroll handler
                 window.addEventListener('resize', refreshStickyTriggerOffset);
 
                 const formatLookupValue = (element, value) => {
@@ -547,8 +533,6 @@
         };
         document.addEventListener('DOMContentLoaded', initDocumentForm);
         document.addEventListener('spa:loaded', initDocumentForm);
-    </script>
-        <p><button class="button btn btn-warning" type="submit">Simpan data pemohon</button></p>
-    </form>
+        </script>
 </div>
 @endsection

@@ -21,9 +21,9 @@
             <div class="splash-logo-glow"></div>
             <img src="{{ asset('logo.png') }}" alt="Logo Sidodadi" class="splash-logo">
         </div>
-        <h2 class="splash-subtitle">PEMERINTAH DESA SIDODADI</h2>
+        <h2 class="splash-subtitle">SIDOGEN</h2>
         <h1 class="splash-title">Sidodadi Generator</h1>
-        <p class="splash-tagline">Sistem Otomasi Pelayanan Surat & Data Penduduk</p>
+        <p class="splash-tagline">Sistem Otomatisasi Pelayanan Surat</p>
         
         <div class="splash-loader-box">
             <div class="splash-progress-track">
@@ -37,7 +37,7 @@
 <nav class="sidebar position-fixed top-0 start-0 vh-100 p-3" aria-label="Navigasi utama">
     <div class="d-flex align-items-center mb-4">
         <img src="{{ asset('logo.png') }}" alt="Logo Sidodadi" style="height: 32px; width: 32px; margin-right: 10px; object-fit: contain;">
-        <h2 class="m-0 fw-bolder">SIDODADI</h2>
+        <h2 class="m-0 fw-bolder">SIDOGEN</h2>
     </div>
     <a class="nav-link {{ request()->routeIs('documents.create') ? 'active' : '' }} d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('documents.create') }}">Buat Dokumen</a>
     <a class="nav-link {{ request()->routeIs('residents.index') ? 'active' : '' }} d-block my-1 px-3 py-2 rounded text-decoration-none" href="{{ route('residents.index') }}">Data Penduduk</a>

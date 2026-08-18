@@ -62,8 +62,8 @@ return [
         'common' => [
             ['name' => 'nomor_surat', 'label' => 'Nomor Surat', 'type' => 'text', 'rules' => ['required', 'string', 'max:100']],
             ['name' => 'tanggal_surat', 'label' => 'Tanggal Pembuatan Surat', 'type' => 'date', 'rules' => ['required', 'date']],
-            ['name' => 'nama', 'label' => 'Nama Lengkap', 'type' => 'text', 'rules' => ['required', 'string', 'max:150']],
             ['name' => 'nik', 'label' => 'Nomor Induk Kependudukan (NIK)', 'type' => 'text', 'rules' => ['required', 'digits:16']],
+            ['name' => 'nama', 'label' => 'Nama Lengkap', 'type' => 'text', 'rules' => ['required', 'string', 'max:150']],
             ['name' => 'tempat_lahir', 'label' => 'Tempat Lahir', 'type' => 'text', 'rules' => ['required', 'string', 'max:100']],
             ['name' => 'tanggal_lahir', 'label' => 'Tanggal Lahir', 'type' => 'date', 'rules' => ['required', 'date']],
             ['name' => 'jenis_kelamin', 'label' => 'Jenis Kelamin', 'type' => 'select', 'options' => ['Laki-laki', 'Perempuan'], 'rules' => ['required', 'in:Laki-laki,Perempuan']],

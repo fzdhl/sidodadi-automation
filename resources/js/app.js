@@ -132,16 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const stickyElements = document.querySelectorAll('.sticky-heading, .resident-storage-summary');
         if (!stickyElements.length) return;
 
-        const handleScroll = () => {
-            const isScrolled = window.scrollY > 15;
-            stickyElements.forEach(el => {
-                if (isScrolled) {
-                    el.classList.add('scrolled');
-                } else {
-                    el.classList.remove('scrolled');
-                }
-            });
-        };
+        // No-op handler: disable visual morphing on scroll
+        const handleScroll = () => {};
 
         window.removeEventListener('scroll', handleScroll);
         window.addEventListener('scroll', handleScroll, { passive: true });

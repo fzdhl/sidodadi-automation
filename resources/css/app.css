@@ -96,45 +96,45 @@ h1, h2, h3, h4, h5, h6 {
     position: sticky;
     top: 0;
     z-index: 1015;
-    background: transparent;
-    padding: 22px 24px 16px;
+    /* keep a solid background by default so it doesn't clash with page content */
+    background: rgba(0, 30, 14, 0.88) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    /* smaller default size */
+    padding: 12px 24px;
     margin-bottom: 16px;
     border-radius: 0 0 20px 20px;
     border-bottom: 1px solid transparent;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none;
 }
 
 .sticky-heading h1 {
     margin-bottom: 4px;
-    font-size: 1.75rem;
+    font-size: 1.35rem;
     font-weight: 800;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none;
 }
 
 .sticky-heading p {
     margin-bottom: 0;
     color: var(--sidodadi-muted);
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 0.85rem;
+    transition: none;
 }
 
 .sticky-heading.scrolled {
-    background: rgba(0, 30, 14, 0.88) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
-    padding: 12px 24px !important;
+    /* no visual size/color changes on scroll; keep same background */
     border-bottom: 1px solid rgba(254, 197, 30, 0.35) !important;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(254, 197, 30, 0.18) !important;
     border-radius: 0 0 20px 20px !important;
 }
 
 .sticky-heading.scrolled h1 {
-    font-size: 1.35rem !important;
-    color: #ffffff !important;
+    /* no color/size change */
 }
 
 .sticky-heading.scrolled p {
-    font-size: 0.85rem !important;
-    color: rgba(248, 245, 232, 0.8) !important;
+    /* no color/size change */
 }
 
 .resident-storage-summary {
